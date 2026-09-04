@@ -1426,6 +1426,52 @@
     z-index: 99999 !important;
   }
 
+
+
+/* ==================== ATTENDANCE CALENDAR ==================== */
+.attendance-view{max-width:1240px;margin:0 auto;padding:6px 0 38px;}
+.attendance-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:20px 22px;border:1px solid rgba(78,173,231,.20);border-radius:18px;background:linear-gradient(135deg,rgba(8,28,50,.94),rgba(8,45,65,.74));box-shadow:0 18px 38px rgba(0,0,0,.20);}
+.attendance-title{font-size:25px;font-weight:900;letter-spacing:.1px;margin:0;color:var(--text);}
+.attendance-sub{color:var(--text-faint);font-size:13px;margin-top:6px;line-height:1.55;}
+.attendance-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.att-cal-btn{border:1px solid rgba(80,190,255,.32);background:rgba(7,32,58,.88);color:var(--text);border-radius:11px;padding:10px 14px;cursor:pointer;font:inherit;font-weight:800;font-size:12px;transition:.18s ease;}
+.att-cal-btn:hover{border-color:var(--accent);background:rgba(20,71,104,.78);box-shadow:0 0 18px rgba(33,196,255,.16);transform:translateY(-1px);}
+.att-cal-btn:active{transform:translateY(0);}
+.attendance-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.72fr);gap:18px;align-items:start;}
+.attendance-card{background:linear-gradient(180deg,rgba(7,25,45,.94),rgba(5,20,38,.88));border:1px solid rgba(78,173,231,.22);border-radius:18px;box-shadow:0 14px 32px rgba(0,0,0,.22);overflow:hidden;}
+.att-calendar{padding:20px;}
+.att-month-label{font-size:20px;font-weight:900;text-align:center;margin-bottom:18px;letter-spacing:.3px;color:#eaf8ff;}
+.att-weekdays,.att-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;}
+.att-weekdays{margin-bottom:8px;}
+.att-weekdays div{text-align:center;color:#8fa9bd;font-size:11px;font-weight:900;padding:7px 0;text-transform:uppercase;letter-spacing:.65px;}
+.att-day{min-height:86px;border:1px solid rgba(78,173,231,.15);background:linear-gradient(145deg,rgba(12,38,64,.72),rgba(7,27,49,.70));border-radius:13px;padding:10px;position:relative;cursor:pointer;transition:.18s ease;text-align:left;color:var(--text);font:inherit;overflow:hidden;}
+.att-day::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:transparent;transition:.18s ease;}
+.att-day.empty{visibility:hidden;cursor:default;}
+.att-day:hover:not(.empty){border-color:rgba(61,205,255,.65);background:rgba(16,69,104,.68);transform:translateY(-2px);box-shadow:0 9px 20px rgba(0,0,0,.16);}
+.att-day.selected{border-color:rgba(47,211,255,.88);background:linear-gradient(145deg,rgba(17,82,121,.78),rgba(11,46,78,.84));box-shadow:0 0 0 1px rgba(47,211,255,.18),0 10px 22px rgba(0,0,0,.18);}
+.att-day.selected::after{background:linear-gradient(90deg,#20d7ff,#3ee6a8);}
+.att-day.today{box-shadow:inset 0 0 0 1px rgba(255,205,72,.86);}
+.att-day-num{font-size:14px;font-weight:900;color:#dcebf6;position:relative;z-index:1;}
+.att-day-today{display:block;margin-top:4px;color:#ffd45a;font-size:9px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;}
+.att-present-count{position:absolute;right:9px;bottom:9px;min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1cc88a,#0b9fda);color:white;font-size:11px;font-weight:900;box-shadow:0 5px 12px rgba(0,0,0,.24);}
+.att-side{padding:20px;position:sticky;top:16px;}
+.att-side h3{margin:0 0 5px;font-size:18px;color:#eaf8ff;}
+.att-selected-date{color:var(--accent);font-size:12px;margin-bottom:16px;line-height:1.45;}
+.att-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.att-stat{padding:14px;border:1px solid rgba(78,173,231,.16);border-radius:13px;background:rgba(10,35,60,.68);}
+.att-stat b{display:block;font-size:23px;color:#42e3ba;line-height:1;}
+.att-stat span{display:block;margin-top:6px;font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.65px;font-weight:800;}
+.att-list{display:flex;flex-direction:column;gap:9px;max-height:470px;overflow:auto;padding-right:3px;}
+.att-list::-webkit-scrollbar{width:7px}.att-list::-webkit-scrollbar-thumb{background:rgba(77,170,220,.28);border-radius:99px;}
+.att-person{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(78,173,231,.13);border-radius:13px;background:rgba(10,32,57,.58);}
+.att-avatar{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#2678ff,#6d42d8);font-weight:900;color:#fff;flex:0 0 auto;}
+.att-person-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.att-person-meta{font-size:10px;color:var(--text-faint);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.att-time{margin-left:auto;color:#55dfb4;font-size:11px;font-weight:900;white-space:nowrap;padding-left:8px;}
+.att-empty{padding:28px 10px;text-align:center;color:var(--text-faint);font-size:13px;border:1px dashed rgba(78,173,231,.14);border-radius:12px;}
+@media(max-width:980px){.attendance-layout{grid-template-columns:1fr}.att-side{position:static}.attendance-head{padding:18px}.attendance-toolbar{width:100%;}.att-cal-btn{flex:1;}}
+@media(max-width:620px){.attendance-head{align-items:flex-start}.att-calendar{padding:12px}.att-weekdays,.att-grid{gap:4px}.att-weekdays div{font-size:9px}.att-day{min-height:58px;padding:7px;border-radius:9px}.att-day-num{font-size:12px}.att-present-count{min-width:20px;height:20px;font-size:9px;right:5px;bottom:5px}.att-day-today{display:none}.attendance-title{font-size:21px}}
+
 </style>
 <script>
 /* Google-Forms-style Add Question: deliberately inline/global so it cannot be lost if another init fails. */
@@ -1647,6 +1693,7 @@
   <div class="staff-menu-btn" id="menuProcessBtn" data-view="process">🗂 All Process</div>
   <div class="staff-menu-btn" id="menuEmployeesBtn" data-view="employees">🧑‍💼 All New Employees</div>
   <div class="staff-menu-btn" id="menuProgressBtn" data-view="progress">👥 Agent Progress</div>
+  <div class="staff-menu-btn" id="menuAttendanceBtn" data-view="attendance">📅 Attendance Calendar</div>
   <div class="staff-menu-btn" id="certNavBtn">🎓 Certificates</div>
 </div>
 
@@ -1687,6 +1734,18 @@
     </div>
   </div>
 
+</div>
+
+<!-- Attendance Calendar view (staff only) -->
+<div id="attendanceView" class="attendance-view" style="display:none;">
+  <div class="attendance-head">
+    <div><h2 class="attendance-title">📅 Attendance Calendar</h2><div class="attendance-sub">Agent login is recorded automatically. Select any date to see who was present.</div></div>
+    <div class="attendance-toolbar"><button type="button" class="att-cal-btn" id="attendancePrevBtn">‹ Previous</button><button type="button" class="att-cal-btn" id="attendanceTodayBtn">Today</button><button type="button" class="att-cal-btn" id="attendanceNextBtn">Next ›</button></div>
+  </div>
+  <div class="attendance-layout">
+    <div class="attendance-card attendance-calendar"><div class="att-month-label" id="attendanceMonthLabel">—</div><div class="att-weekdays"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div><div class="att-grid" id="attendanceGrid"></div></div>
+    <div class="attendance-card att-side"><h3 id="attendanceSideTitle">Attendance Details</h3><div class="att-selected-date" id="attendanceSelectedDate">Select a date</div><div class="att-summary"><div class="att-stat"><b id="attendancePresentCount">0</b><span>Present</span></div><div class="att-stat"><b id="attendanceTotalCount">0</b><span>Agents</span></div></div><div class="att-list" id="attendancePeople"></div></div>
+  </div>
 </div>
 
 <!-- All New Employees view (staff only) -->
@@ -2722,6 +2781,7 @@ function switchStaffView(view){
   document.getElementById('processView').style.display = view === 'process' ? 'block' : 'none';
   document.getElementById('employeesView').style.display = view === 'employees' ? 'block' : 'none';
   document.getElementById('progressView').style.display = view === 'progress' ? 'block' : 'none';
+  const av=document.getElementById('attendanceView'); if(av) av.style.display = view === 'attendance' ? 'block' : 'none';
 
   if(view === 'home') renderHomeDashboard();
   if(view === 'employees') openEmployeesView();
@@ -2733,6 +2793,14 @@ document.getElementById('menuHomeBtn').addEventListener('click', ()=> switchStaf
 document.getElementById('menuProcessBtn').addEventListener('click', ()=> switchStaffView('process'));
 document.getElementById('menuEmployeesBtn').addEventListener('click', ()=> switchStaffView('employees'));
 document.getElementById('menuProgressBtn').addEventListener('click', ()=> switchStaffView('progress'));
+const attendanceMenuBtn=document.getElementById('menuAttendanceBtn');
+if(attendanceMenuBtn) attendanceMenuBtn.addEventListener('click', openAttendanceCalendar);
+const attendancePrevBtn=document.getElementById('attendancePrevBtn');
+const attendanceNextBtn=document.getElementById('attendanceNextBtn');
+const attendanceTodayBtn=document.getElementById('attendanceTodayBtn');
+if(attendancePrevBtn) attendancePrevBtn.addEventListener('click',()=>{let m=attendanceState.month-1,y=attendanceState.year;if(m<1){m=12;y--;}attendanceState.selectedDate=null;loadAttendanceCalendar(y,m);});
+if(attendanceNextBtn) attendanceNextBtn.addEventListener('click',()=>{let m=attendanceState.month+1,y=attendanceState.year;if(m>12){m=1;y++;}attendanceState.selectedDate=null;loadAttendanceCalendar(y,m);});
+if(attendanceTodayBtn) attendanceTodayBtn.addEventListener('click',()=>{const n=new Date();attendanceState.selectedDate=attendanceDateKey(n);loadAttendanceCalendar(n.getFullYear(),n.getMonth()+1);});
 
 const DASH_RING_CIRC = 263.9; // 2 * PI * 42
 function setDashRing(id, pct){
@@ -5578,6 +5646,50 @@ async function renderCertificateCanvas(){
 #qbQuestions .qb-row.qb-drag-over{outline:2px solid rgba(0,220,200,.65);outline-offset:3px;}
 .qb-drag{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 body.qb-pointer-dragging{user-select:none;-webkit-user-select:none;}
+
+/* ==================== ATTENDANCE CALENDAR ==================== */
+.attendance-view{max-width:1240px;margin:0 auto;padding:6px 0 38px;}
+.attendance-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:20px 22px;border:1px solid rgba(78,173,231,.20);border-radius:18px;background:linear-gradient(135deg,rgba(8,28,50,.94),rgba(8,45,65,.74));box-shadow:0 18px 38px rgba(0,0,0,.20);}
+.attendance-title{font-size:25px;font-weight:900;letter-spacing:.1px;margin:0;color:var(--text);}
+.attendance-sub{color:var(--text-faint);font-size:13px;margin-top:6px;line-height:1.55;}
+.attendance-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.att-cal-btn{border:1px solid rgba(80,190,255,.32);background:rgba(7,32,58,.88);color:var(--text);border-radius:11px;padding:10px 14px;cursor:pointer;font:inherit;font-weight:800;font-size:12px;transition:.18s ease;}
+.att-cal-btn:hover{border-color:var(--accent);background:rgba(20,71,104,.78);box-shadow:0 0 18px rgba(33,196,255,.16);transform:translateY(-1px);}
+.att-cal-btn:active{transform:translateY(0);}
+.attendance-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.72fr);gap:18px;align-items:start;}
+.attendance-card{background:linear-gradient(180deg,rgba(7,25,45,.94),rgba(5,20,38,.88));border:1px solid rgba(78,173,231,.22);border-radius:18px;box-shadow:0 14px 32px rgba(0,0,0,.22);overflow:hidden;}
+.att-calendar{padding:20px;}
+.att-month-label{font-size:20px;font-weight:900;text-align:center;margin-bottom:18px;letter-spacing:.3px;color:#eaf8ff;}
+.att-weekdays,.att-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;}
+.att-weekdays{margin-bottom:8px;}
+.att-weekdays div{text-align:center;color:#8fa9bd;font-size:11px;font-weight:900;padding:7px 0;text-transform:uppercase;letter-spacing:.65px;}
+.att-day{min-height:86px;border:1px solid rgba(78,173,231,.15);background:linear-gradient(145deg,rgba(12,38,64,.72),rgba(7,27,49,.70));border-radius:13px;padding:10px;position:relative;cursor:pointer;transition:.18s ease;text-align:left;color:var(--text);font:inherit;overflow:hidden;}
+.att-day::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:transparent;transition:.18s ease;}
+.att-day.empty{visibility:hidden;cursor:default;}
+.att-day:hover:not(.empty){border-color:rgba(61,205,255,.65);background:rgba(16,69,104,.68);transform:translateY(-2px);box-shadow:0 9px 20px rgba(0,0,0,.16);}
+.att-day.selected{border-color:rgba(47,211,255,.88);background:linear-gradient(145deg,rgba(17,82,121,.78),rgba(11,46,78,.84));box-shadow:0 0 0 1px rgba(47,211,255,.18),0 10px 22px rgba(0,0,0,.18);}
+.att-day.selected::after{background:linear-gradient(90deg,#20d7ff,#3ee6a8);}
+.att-day.today{box-shadow:inset 0 0 0 1px rgba(255,205,72,.86);}
+.att-day-num{font-size:14px;font-weight:900;color:#dcebf6;position:relative;z-index:1;}
+.att-day-today{display:block;margin-top:4px;color:#ffd45a;font-size:9px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;}
+.att-present-count{position:absolute;right:9px;bottom:9px;min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1cc88a,#0b9fda);color:white;font-size:11px;font-weight:900;box-shadow:0 5px 12px rgba(0,0,0,.24);}
+.att-side{padding:20px;position:sticky;top:16px;}
+.att-side h3{margin:0 0 5px;font-size:18px;color:#eaf8ff;}
+.att-selected-date{color:var(--accent);font-size:12px;margin-bottom:16px;line-height:1.45;}
+.att-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.att-stat{padding:14px;border:1px solid rgba(78,173,231,.16);border-radius:13px;background:rgba(10,35,60,.68);}
+.att-stat b{display:block;font-size:23px;color:#42e3ba;line-height:1;}
+.att-stat span{display:block;margin-top:6px;font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.65px;font-weight:800;}
+.att-list{display:flex;flex-direction:column;gap:9px;max-height:470px;overflow:auto;padding-right:3px;}
+.att-list::-webkit-scrollbar{width:7px}.att-list::-webkit-scrollbar-thumb{background:rgba(77,170,220,.28);border-radius:99px;}
+.att-person{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(78,173,231,.13);border-radius:13px;background:rgba(10,32,57,.58);}
+.att-avatar{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#2678ff,#6d42d8);font-weight:900;color:#fff;flex:0 0 auto;}
+.att-person-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.att-person-meta{font-size:10px;color:var(--text-faint);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.att-time{margin-left:auto;color:#55dfb4;font-size:11px;font-weight:900;white-space:nowrap;padding-left:8px;}
+.att-empty{padding:28px 10px;text-align:center;color:var(--text-faint);font-size:13px;border:1px dashed rgba(78,173,231,.14);border-radius:12px;}
+@media(max-width:980px){.attendance-layout{grid-template-columns:1fr}.att-side{position:static}.attendance-head{padding:18px}.attendance-toolbar{width:100%;}.att-cal-btn{flex:1;}}
+@media(max-width:620px){.attendance-head{align-items:flex-start}.att-calendar{padding:12px}.att-weekdays,.att-grid{gap:4px}.att-weekdays div{font-size:9px}.att-day{min-height:58px;padding:7px;border-radius:9px}.att-day-num{font-size:12px}.att-present-count{min-width:20px;height:20px;font-size:9px;right:5px;bottom:5px}.att-day-today{display:none}.attendance-title{font-size:21px}}
 </style>
       </head><body></body></html>`);
     doc.close();
@@ -6139,6 +6251,79 @@ document.getElementById('tabs').addEventListener('click', ()=>{
   window.addEventListener('resize', placeBubble);
   window.addEventListener('load', placeBubble);
 })();
+
+/* ==================== ATTENDANCE CALENDAR ==================== */
+const attendanceState = { year:null, month:null, selectedDate:null, records:[], totalAgents:0 };
+function attendanceDateKey(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function attendanceDisplayDate(key){
+  if(!key) return 'Select a date';
+  const d=new Date(key+'T00:00:00');
+  return d.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+async function loadAttendanceCalendar(year, month){
+  if(!currentUser || ['qa','tl','hr','hod'].indexOf(String(currentUser.role).toLowerCase())<0) return;
+  const grid=document.getElementById('attendanceGrid');
+  if(grid) grid.innerHTML='<div class="att-empty" style="grid-column:1/-1">Loading attendance…</div>';
+  try{
+    const res=await callBackend({action:'getAttendanceCalendar',year,month,username:currentUser.username,role:currentUser.role});
+    if(!res.success) throw new Error(res.message||'Could not load attendance.');
+    attendanceState.year=Number(res.year)||year;
+    attendanceState.month=Number(res.month)||month;
+    attendanceState.records=Array.isArray(res.records)?res.records:[];
+    attendanceState.totalAgents=Number(res.totalAgents)||0;
+    const prefix=`${attendanceState.year}-${String(attendanceState.month).padStart(2,'0')}-`;
+    if(!attendanceState.selectedDate || !attendanceState.selectedDate.startsWith(prefix)){
+      const now=new Date();
+      const todayKey=attendanceDateKey(now);
+      attendanceState.selectedDate=todayKey.startsWith(prefix)?todayKey:(attendanceState.records[0]?.date||`${prefix}01`);
+    }
+    renderAttendanceCalendar();
+  }catch(err){
+    if(grid) grid.innerHTML=`<div class="att-empty" style="grid-column:1/-1">${escapeHtml(err.message||'Could not load attendance.')}</div>`;
+  }
+}
+function renderAttendanceCalendar(){
+  const y=attendanceState.year,m=attendanceState.month;
+  if(!y||!m) return;
+  const monthName=new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  document.getElementById('attendanceMonthLabel').textContent=monthName;
+  const byDate={};
+  attendanceState.records.forEach(r=>{if(r && r.date){(byDate[r.date]||(byDate[r.date]=[])).push(r);}});
+  const grid=document.getElementById('attendanceGrid'); grid.innerHTML='';
+  const first=new Date(y,m-1,1).getDay(), days=new Date(y,m,0).getDate(), today=attendanceDateKey(new Date());
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='att-day empty';grid.appendChild(e);}
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const box=document.createElement('button');box.type='button';
+    box.className='att-day'+(key===attendanceState.selectedDate?' selected':'')+(key===today?' today':'');
+    const recs=byDate[key]||[];
+    box.innerHTML=`<span class="att-day-num">${d}</span>${key===today?'<span class="att-day-today">Today</span>':''}${recs.length?`<span class="att-present-count" title="${recs.length} present">${recs.length}</span>`:''}`;
+    box.addEventListener('click',()=>{attendanceState.selectedDate=key;renderAttendanceCalendar();});
+    grid.appendChild(box);
+  }
+  renderAttendanceDetails(byDate[attendanceState.selectedDate]||[]);
+}
+function renderAttendanceDetails(records){
+  const key=attendanceState.selectedDate;
+  document.getElementById('attendanceSelectedDate').textContent=attendanceDisplayDate(key);
+  document.getElementById('attendancePresentCount').textContent=records.length;
+  document.getElementById('attendanceTotalCount').textContent=attendanceState.totalAgents;
+  const list=document.getElementById('attendancePeople');
+  if(!records.length){list.innerHTML='<div class="att-empty">No agent attendance recorded for this date.</div>';return;}
+  list.innerHTML=records.map(r=>{
+    const initial=escapeHtml(String(r.fullName||r.username||'?').trim().charAt(0).toUpperCase());
+    const meta=[r.employeeId,r.departmentLabel||r.department].filter(Boolean).map(escapeHtml).join(' · ');
+    return `<div class="att-person"><div class="att-avatar">${initial}</div><div style="min-width:0"><div class="att-person-name">${escapeHtml(r.fullName||r.username||'—')}</div><div class="att-person-meta">${meta||escapeHtml(r.username||'')}</div></div><div class="att-time">${escapeHtml(r.loginTime||'')}</div></div>`;
+  }).join('');
+}
+function openAttendanceCalendar(){
+  const now=new Date();
+  attendanceState.year=now.getFullYear(); attendanceState.month=now.getMonth()+1; attendanceState.selectedDate=attendanceDateKey(now);
+  switchStaffView('attendance'); loadAttendanceCalendar(attendanceState.year,attendanceState.month);
+}
 </script>
 </body>
 </html>

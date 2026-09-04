@@ -530,18 +530,152 @@
   /* 3D Floating Action Buttons */
   .help-btn{
     position: fixed; right: 22px; bottom: 22px; z-index: 10;
-    width: 52px; height: 52px; border-radius: 50%;
-    background: var(--bg-panel); border: 1px solid var(--line); color: var(--text-muted);
+    width: 66px; height: 66px; border-radius: 50%;
+    background: var(--bg-panel); border: 1px solid var(--line); color: var(--accent);
     display: flex; align-items: center; justify-content: center; cursor: pointer;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 19px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 30px;
     box-shadow: 0 12px 28px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.25);
     backdrop-filter: blur(16px);
     transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: helpBtnPulse 2.4s ease-in-out infinite;
   }
   .help-btn:hover{
     color: var(--accent); border-color: var(--accent);
     transform: translateY(-4px) scale(1.1) rotate(10deg);
     box-shadow: 0 18px 36px -8px var(--accent-glow);
+    animation-play-state: paused;
+  }
+  @keyframes helpBtnPulse{
+    0%, 100%{ box-shadow: 0 12px 28px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.25), 0 0 0 0 var(--accent-glow); }
+    50%{ box-shadow: 0 12px 28px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.25), 0 0 0 14px transparent; transform: scale(1.06); }
+  }
+
+  /* Chat unread badge (sits on top of the help/chat bubble) */
+  .chat-badge{
+    position: absolute; top: -4px; right: -4px;
+    min-width: 21px; height: 21px; padding: 0 5px; border-radius: 999px;
+    background: #ff4d5e; color: #fff;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 3px var(--bg-panel), 0 4px 10px rgba(255,60,70,.55);
+    z-index: 2;
+  }
+  .chat-badge.show{ display: flex; }
+
+  /* Floating Chat Panel */
+  .chat-panel{
+    position: fixed; right: 22px; bottom: 100px; z-index: 40;
+    width: 380px; max-width: calc(100vw - 32px);
+    height: 560px; max-height: calc(100vh - 140px);
+    background: var(--bg-panel);
+    border: 1px solid var(--line-glow);
+    border-radius: 20px;
+    box-shadow: 0 30px 70px -18px rgba(0,0,0,0.85), 0 0 26px -8px var(--accent-glow), inset 0 1px 2px rgba(255,255,255,0.25);
+    backdrop-filter: blur(22px);
+    display: flex; flex-direction: column; overflow: hidden;
+    opacity: 0; transform: translateY(24px) scale(0.95); pointer-events: none;
+    transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .chat-panel.open{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+  .chat-head{
+    padding: 15px 15px 13px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-glow), transparent 60%);
+  }
+  .chat-head-back, .chat-head-close{
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--text-muted);
+    display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;
+    transition: all .2s ease;
+  }
+  .chat-head-close{ display: flex; }
+  .chat-head-back.show{ display: flex; }
+  .chat-head-back:hover, .chat-head-close:hover{ color: #fff; border-color: var(--accent); background: var(--accent); }
+  .chat-head-titlewrap{ flex: 1; min-width: 0; }
+  .chat-head-title{
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15.5px; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chat-head-sub{
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint);
+    letter-spacing: .04em; text-transform: uppercase; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .chat-search-wrap{ padding: 12px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .chat-search{
+    width: 100%; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--line);
+    background: rgba(255,255,255,.04); color: var(--text-primary); font-size: 12.5px;
+    font-family: inherit; outline: none; transition: box-shadow .2s ease, border-color .2s ease;
+  }
+  .chat-search:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .chat-list{ flex: 1; overflow-y: auto; padding: 6px 8px; }
+  .chat-section-label{
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--text-faint); padding: 10px 8px 6px;
+  }
+  .chat-row{
+    display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 12px; cursor: pointer;
+    transition: background .15s ease;
+  }
+  .chat-row:hover{ background: rgba(255,255,255,.06); }
+  .chat-avatar{
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent); color: #0A0F1C;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 13.5px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-row-body{ flex: 1; min-width: 0; }
+  .chat-row-name{
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px; color: var(--text-primary);
+    display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chat-row-role{
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0;
+  }
+  .chat-row-preview{
+    font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; margin-top: 1px;
+  }
+  .chat-row-meta{ display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+  .chat-row-time{ font-size: 10px; color: var(--text-faint); }
+  .chat-row-unread{
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+    background: var(--accent); color: #0A0F1C; font-size: 10.5px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-empty{ text-align: center; color: var(--text-faint); font-size: 12px; padding: 34px 16px; line-height: 1.6; }
+
+  .chat-thread{ flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .chat-bubble{
+    max-width: 78%; padding: 9px 13px; border-radius: 16px; font-size: 12.8px; line-height: 1.5;
+    word-wrap: break-word; white-space: pre-wrap;
+  }
+  .chat-bubble.me{ align-self: flex-end; background: var(--accent); color: #0A0F1C; border-bottom-right-radius: 4px; }
+  .chat-bubble.them{ align-self: flex-start; background: var(--bg-panel-2); border: 1px solid var(--line); color: var(--text-primary); border-bottom-left-radius: 4px; }
+  .chat-bubble-time{ display: block; font-size: 9.5px; margin-top: 4px; opacity: .65; text-align: right; }
+
+  .chat-input-bar{ display: none; align-items: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); flex-shrink: 0; }
+  .chat-input-bar textarea{
+    flex: 1; resize: none; max-height: 90px; min-height: 38px; padding: 9px 12px; border-radius: 14px;
+    border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--text-primary);
+    font-family: inherit; font-size: 12.5px; outline: none; line-height: 1.4;
+    transition: box-shadow .2s ease, border-color .2s ease;
+  }
+  .chat-input-bar textarea:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .chat-send-btn{
+    width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--accent); color: #0A0F1C;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex-shrink: 0;
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  .chat-send-btn:hover{ transform: scale(1.08); }
+  .chat-send-btn:disabled{ opacity: .5; cursor: not-allowed; transform: none; }
+
+  @media (max-width: 480px){
+    .chat-panel{ right: 12px; left: 12px; width: auto; bottom: 92px; height: calc(100vh - 150px); }
   }
 
   /* 3D Modals */
@@ -1282,6 +1416,16 @@
   @media (max-width:900px){ .product-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .product-summary{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width:620px){ .product-grid{ grid-template-columns:1fr; max-height:60vh; } .product-summary{ grid-template-columns:1fr 1fr; } .product-detail-grid{ grid-template-columns:1fr; } .product-sync{ width:100%; margin-left:0; } }
 
+
+  /* FINAL FIX: Keep the Team Chat bubble pinned to the visible viewport even though body uses CSS perspective. */
+  .help-btn{
+    position: absolute !important;
+    right: 22px !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 99999 !important;
+  }
+
 </style>
 <script>
 /* Google-Forms-style Add Question: deliberately inline/global so it cannot be lost if another init fails. */
@@ -1621,7 +1765,28 @@
 </main>
 </div>
 
-<div class="help-btn" id="helpBtn">?</div>
+<div class="help-btn" id="helpBtn" title="Team Chat">💬<span class="chat-badge" id="chatBadge">0</span></div>
+
+<!-- Internal Team Chat Panel -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <div class="chat-head-back" id="chatBackBtn">←</div>
+    <div class="chat-head-titlewrap">
+      <div class="chat-head-title" id="chatHeadTitle">Team Chat</div>
+      <div class="chat-head-sub" id="chatHeadSub">Message anyone across teams</div>
+    </div>
+    <div class="chat-head-close" id="chatCloseBtn">✕</div>
+  </div>
+  <div class="chat-search-wrap" id="chatSearchWrap">
+    <input type="text" class="chat-search" id="chatSearchInput" placeholder="Search people by name…" autocomplete="off" />
+  </div>
+  <div class="chat-list" id="chatList"></div>
+  <div class="chat-thread" id="chatThread" style="display:none;"></div>
+  <div class="chat-input-bar" id="chatInputBar">
+    <textarea id="chatInputText" placeholder="Type a message…" rows="1"></textarea>
+    <button type="button" class="chat-send-btn" id="chatSendBtn" title="Send">➤</button>
+  </div>
+</div>
 <!-- Back to Top Button -->
 <button id="backToTopBtn" title="Back to top" aria-label="Back to top">↑</button>
 <div class="toast" id="toast"></div>
@@ -2477,6 +2642,16 @@ document.getElementById('logoutBtn').addEventListener('click', (e)=>{
   loginForm.reset();
   registerForm.reset();
   authTabLogin.click();
+
+  closeChatPanel();
+  clearInterval(chatState.unreadTimer);
+  clearInterval(chatState.threadTimer);
+  chatState.people = null;
+  chatState.peopleByUser = {};
+  chatState.conversations = [];
+  chatState.activeWith = null;
+  chatState.view = 'list';
+  chatBadge.classList.remove('show');
 });
 
 document.getElementById('userBarToggle').addEventListener('click', ()=>{
@@ -2502,6 +2677,10 @@ async function enterApp(){
   applyRolePermissions();
   initApp();
 
+  refreshUnreadBadge();
+  clearInterval(chatState.unreadTimer);
+  chatState.unreadTimer = setInterval(refreshUnreadBadge, 20000);
+
   if(currentUser.role === 'agent'){
     try{
       const res = await callBackend({ action:'getProgress', username: currentUser.username });
@@ -2520,7 +2699,7 @@ async function enterApp(){
 function applyRolePermissions(){
   const isAgent = currentUser.role === 'agent';
   const helpBtn = document.getElementById('helpBtn');
-  if(helpBtn) helpBtn.style.display = isAgent ? 'none' : 'flex';
+  if(helpBtn) helpBtn.style.display = 'flex';
   const certBtn = document.getElementById('certNavBtn');
   if(certBtn) certBtn.style.display = isAgent ? 'none' : 'flex';
   const menuBar = document.getElementById('staffMenuBar');
@@ -3961,17 +4140,299 @@ document.getElementById('markDoneBtn').addEventListener('click', async ()=>{
   }
 });
 
+/* ============================================================ */
+/* INTERNAL TEAM CHAT — Agents/Sales, QA, TL, HR & HOD can all    */
+/* message each other (same-role or cross-role), via the 💬 bubble */
+/* ============================================================ */
+const chatState = {
+  open: false,
+  view: 'list',          // 'list' | 'thread'
+  people: null,           // cached directory: [{username, fullName, role, department}]
+  peopleByUser: {},       // lowercase username -> person
+  conversations: [],      // [{username, lastMessage, lastAt, unreadCount}]
+  activeWith: null,       // username of the currently open thread
+  activeMessages: [],
+  unreadTimer: null,
+  threadTimer: null,
+  sending: false
+};
+
+const chatBadge       = document.getElementById('chatBadge');
+const chatPanel       = document.getElementById('chatPanel');
+const chatSearchInput = document.getElementById('chatSearchInput');
+const chatSearchWrap  = document.getElementById('chatSearchWrap');
+const chatListEl      = document.getElementById('chatList');
+const chatThreadEl    = document.getElementById('chatThread');
+const chatInputBar    = document.getElementById('chatInputBar');
+const chatInputText   = document.getElementById('chatInputText');
+const chatSendBtn     = document.getElementById('chatSendBtn');
+const chatBackBtn     = document.getElementById('chatBackBtn');
+const chatCloseBtn    = document.getElementById('chatCloseBtn');
+const chatHeadTitle   = document.getElementById('chatHeadTitle');
+const chatHeadSub     = document.getElementById('chatHeadSub');
+
+function chatTimeShort(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const now = new Date();
+  if(d.toDateString() === now.toDateString()){
+    return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  }
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  if(d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+}
+function chatInitials(name){
+  const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '?';
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+function chatPersonLabel(username){
+  const p = chatState.peopleByUser[String(username).toLowerCase()];
+  return p ? p.fullName : username;
+}
+function chatPersonRole(username){
+  const p = chatState.peopleByUser[String(username).toLowerCase()];
+  return p ? (ROLE_LABELS[p.role] || p.role) : '';
+}
+
+async function refreshUnreadBadge(){
+  if(!currentUser) return;
+  try{
+    const res = await callBackend({ action:'getUnreadMessageCount', username: currentUser.username });
+    if(res && res.success){
+      const n = res.unread || 0;
+      if(n > 0){ chatBadge.textContent = n > 99 ? '99+' : String(n); chatBadge.classList.add('show'); }
+      else { chatBadge.classList.remove('show'); }
+    }
+  } catch(err){}
+}
+
+async function loadChatPeople(force){
+  if(chatState.people && !force) return chatState.people;
+  try{
+    const res = await callBackend({ action:'listMessageableUsers', username: currentUser.username });
+    if(res && res.success){
+      chatState.people = res.users || [];
+      chatState.peopleByUser = {};
+      chatState.people.forEach(p=> chatState.peopleByUser[String(p.username).toLowerCase()] = p);
+    }
+  } catch(err){}
+  return chatState.people || [];
+}
+
+async function loadChatConversations(){
+  try{
+    const res = await callBackend({ action:'getConversations', username: currentUser.username });
+    if(res && res.success){
+      chatState.conversations = (res.conversations || []).sort((a,b)=> new Date(b.lastAt) - new Date(a.lastAt));
+    }
+  } catch(err){}
+}
+
+function renderChatList(){
+  chatThreadEl.style.display = 'none';
+  chatInputBar.style.display = 'none';
+  chatListEl.style.display = 'block';
+  chatSearchWrap.style.display = 'block';
+  chatBackBtn.classList.remove('show');
+  chatHeadTitle.textContent = 'Team Chat';
+  chatHeadSub.textContent = 'Message anyone across teams';
+
+  const q = chatSearchInput.value.trim().toLowerCase();
+  let html = '';
+
+  const convs = chatState.conversations.filter(c=>{
+    if(!q) return true;
+    return chatPersonLabel(c.username).toLowerCase().indexOf(q) !== -1 ||
+           String(c.username).toLowerCase().indexOf(q) !== -1;
+  });
+
+  if(convs.length){
+    html += `<div class="chat-section-label">Recent</div>`;
+    convs.forEach(c=>{
+      const name = chatPersonLabel(c.username);
+      const role = chatPersonRole(c.username);
+      html += `
+        <div class="chat-row" data-user="${escapeHtml(c.username)}">
+          <div class="chat-avatar">${escapeHtml(chatInitials(name))}</div>
+          <div class="chat-row-body">
+            <div class="chat-row-name">${escapeHtml(name)}${role ? ` <span class="chat-row-role">${escapeHtml(role)}</span>` : ''}</div>
+            <div class="chat-row-preview">${escapeHtml(c.lastMessage || '')}</div>
+          </div>
+          <div class="chat-row-meta">
+            <div class="chat-row-time">${chatTimeShort(c.lastAt)}</div>
+            ${c.unreadCount ? `<div class="chat-row-unread">${c.unreadCount > 99 ? '99+' : c.unreadCount}</div>` : ''}
+          </div>
+        </div>`;
+    });
+  }
+
+  const convUsernames = new Set(chatState.conversations.map(c=> String(c.username).toLowerCase()));
+  const directory = (chatState.people || []).filter(p=>{
+    if(convUsernames.has(String(p.username).toLowerCase())) return false;
+    if(!q) return true;
+    return String(p.fullName).toLowerCase().indexOf(q) !== -1 ||
+           String(p.username).toLowerCase().indexOf(q) !== -1;
+  });
+
+  if(directory.length){
+    html += `<div class="chat-section-label">${q ? 'People' : 'Start a new chat'}</div>`;
+    directory.forEach(p=>{
+      html += `
+        <div class="chat-row" data-user="${escapeHtml(p.username)}">
+          <div class="chat-avatar">${escapeHtml(chatInitials(p.fullName))}</div>
+          <div class="chat-row-body">
+            <div class="chat-row-name">${escapeHtml(p.fullName)} <span class="chat-row-role">${escapeHtml(ROLE_LABELS[p.role] || p.role)}</span></div>
+            <div class="chat-row-preview">Tap to start a conversation</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  if(!html){
+    html = `<div class="chat-empty">${q ? 'No one matches your search.' : 'No conversations yet.<br/>Search a name above to say hello 👋'}</div>`;
+  }
+  chatListEl.innerHTML = html;
+
+  chatListEl.querySelectorAll('.chat-row').forEach(row=>{
+    row.addEventListener('click', ()=> openChatThread(row.getAttribute('data-user')));
+  });
+}
+
+async function openChatThread(username){
+  chatState.view = 'thread';
+  chatState.activeWith = username;
+  chatListEl.style.display = 'none';
+  chatSearchWrap.style.display = 'none';
+  chatThreadEl.style.display = 'flex';
+  chatThreadEl.innerHTML = `<div class="chat-empty">Loading…</div>`;
+  chatInputBar.style.display = 'flex';
+  chatBackBtn.classList.add('show');
+
+  chatHeadTitle.textContent = chatPersonLabel(username);
+  chatHeadSub.textContent = chatPersonRole(username);
+
+  await loadThreadMessages(true);
+  clearInterval(chatState.threadTimer);
+  chatState.threadTimer = setInterval(()=> loadThreadMessages(false), 4000);
+  chatInputText.focus();
+
+  try{
+    await callBackend({ action:'markConversationRead', username: currentUser.username, withUsername: username });
+    refreshUnreadBadge();
+    loadChatConversations();
+  } catch(err){}
+}
+
+async function loadThreadMessages(scrollDown){
+  if(!chatState.activeWith) return;
+  try{
+    const res = await callBackend({ action:'getConversation', username: currentUser.username, withUsername: chatState.activeWith });
+    if(res && res.success){
+      chatState.activeMessages = res.messages || [];
+      renderThreadMessages(scrollDown);
+    }
+  } catch(err){}
+}
+
+function renderThreadMessages(forceScrollDown){
+  const me = String(currentUser.username).toLowerCase();
+  const wasNearBottom = forceScrollDown || (chatThreadEl.scrollHeight - chatThreadEl.scrollTop - chatThreadEl.clientHeight) < 60;
+  if(!chatState.activeMessages.length){
+    chatThreadEl.innerHTML = `<div class="chat-empty">No messages yet — say hi 👋</div>`;
+    return;
+  }
+  chatThreadEl.innerHTML = chatState.activeMessages.map(m=>{
+    const mine = String(m.fromUsername).toLowerCase() === me;
+    return `<div class="chat-bubble ${mine ? 'me' : 'them'}">${escapeHtml(m.messageText)}<span class="chat-bubble-time">${chatTimeShort(m.timestamp)}</span></div>`;
+  }).join('');
+  if(wasNearBottom) chatThreadEl.scrollTop = chatThreadEl.scrollHeight;
+}
+
+async function sendChatMessageNow(){
+  const text = chatInputText.value.trim();
+  if(!text || !chatState.activeWith || chatState.sending) return;
+  chatState.sending = true;
+  chatSendBtn.disabled = true;
+
+  chatState.activeMessages.push({
+    fromUsername: currentUser.username, toUsername: chatState.activeWith,
+    messageText: text, timestamp: new Date().toISOString()
+  });
+  renderThreadMessages(true);
+  chatInputText.value = '';
+  chatInputText.style.height = 'auto';
+
+  try{
+    const res = await callBackend({ action:'sendMessage', fromUsername: currentUser.username, toUsername: chatState.activeWith, messageText: text });
+    if(!res || !res.success){
+      showToast((res && res.message) || 'Could not send message.');
+    }
+    loadThreadMessages(true);
+    loadChatConversations();
+  } catch(err){
+    showToast('Could not reach the server.');
+  } finally {
+    chatState.sending = false;
+    chatSendBtn.disabled = false;
+  }
+}
+
+chatSendBtn.addEventListener('click', sendChatMessageNow);
+chatInputText.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChatMessageNow(); }
+});
+chatInputText.addEventListener('input', ()=>{
+  chatInputText.style.height = 'auto';
+  chatInputText.style.height = Math.min(chatInputText.scrollHeight, 90) + 'px';
+});
+chatSearchInput.addEventListener('input', renderChatList);
+
+function backToChatList(){
+  chatState.view = 'list';
+  chatState.activeWith = null;
+  clearInterval(chatState.threadTimer);
+  loadChatConversations().then(renderChatList);
+}
+chatBackBtn.addEventListener('click', backToChatList);
+
+async function openChatPanel(){
+  chatState.open = true;
+  chatPanel.classList.add('open');
+  await loadChatPeople(false);
+  await loadChatConversations();
+  if(chatState.view === 'thread' && chatState.activeWith){
+    openChatThread(chatState.activeWith);
+  } else {
+    renderChatList();
+  }
+  chatSearchInput.focus();
+}
+function closeChatPanel(){
+  chatState.open = false;
+  chatPanel.classList.remove('open');
+  clearInterval(chatState.threadTimer);
+}
+function toggleChatPanel(){
+  if(chatState.open) closeChatPanel();
+  else openChatPanel();
+}
+
 function closeAllOverlays(){
   clearQuizTimer();
   ALL_OVERLAYS.forEach(ov=> ov.classList.remove('open'));
   document.getElementById('mediaViewerBody').innerHTML = '';
   if(productCatalogBody) productCatalogBody.innerHTML = '';
   productCatalogState.selected = null;
+  closeChatPanel();
 }
 document.querySelectorAll('[data-close]').forEach(el=>{
   el.addEventListener('click', closeAllOverlays);
 });
-document.getElementById('helpBtn').addEventListener('click', ()=> helpOverlay.classList.add('open'));
+document.getElementById('helpBtn').addEventListener('click', toggleChatPanel);
+chatCloseBtn.addEventListener('click', closeChatPanel);
 document.getElementById('certNavBtn').addEventListener('click', ()=> openCertificateList());
 document.addEventListener('keydown', (e)=>{
   if(e.key==='Escape'){ closeAllOverlays(); }
@@ -5655,6 +6116,29 @@ window.switchTab = function(key){
 document.getElementById('tabs').addEventListener('click', ()=>{
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+
+/* =========================================================
+   FINAL FIX: VIEWPORT-PINNED TEAM CHAT BUBBLE
+   body has CSS perspective, which changes how position:fixed behaves.
+   This keeps the bubble visually fixed without changing the rest of the page.
+========================================================= */
+(function pinChatBubbleToViewport(){
+  const bubble = document.getElementById('helpBtn');
+  if(!bubble) return;
+
+  const placeBubble = ()=>{
+    const bubbleHeight = bubble.offsetHeight || 66;
+    const bottomGap = 22;
+    bubble.style.top = `${window.scrollY + window.innerHeight - bubbleHeight - bottomGap}px`;
+    bubble.style.right = '22px';
+  };
+
+  placeBubble();
+  window.addEventListener('scroll', placeBubble, { passive: true });
+  window.addEventListener('resize', placeBubble);
+  window.addEventListener('load', placeBubble);
+})();
 </script>
 </body>
 </html>

@@ -1101,6 +1101,13 @@
     outline: none; margin-bottom: 8px; resize: vertical;
   }
   .qb-opt-row{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .mat-q-gear{ border:1px solid rgba(76,141,255,.35); background:rgba(76,141,255,.08); color:#8db4ff; font-size:11px; padding:4px 9px; border-radius:6px; cursor:pointer; margin-right:6px; white-space:nowrap; }
+  .mat-q-gear:hover{ border-color:#8db4ff; background:rgba(76,141,255,.16); }
+  .material-card.locked{ opacity:.55; cursor:not-allowed; filter:grayscale(.4); }
+  .material-card.locked:hover{ transform:none !important; }
+  .mat-assess-badge{ display:inline-block; margin-top:4px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.04em; padding:3px 8px; border-radius:999px; border:1px solid rgba(245,166,35,.4); color:#f5a623; background:rgba(245,166,35,.08); }
+  .mat-assess-badge.passed{ border-color:rgba(34,197,94,.4); color:#22c55e; background:rgba(34,197,94,.08); }
+  .mat-take-assess{ margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); text-decoration:underline; }
   .qb-add-btn{
     width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed var(--line);
     background: transparent; color: var(--text-muted); font-family: 'Space Grotesk', sans-serif;
@@ -1944,6 +1951,56 @@
           <button class="btn primary" id="matSaveBtn">Save Materials</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Per-material assessment builder modal (staff: QA/TL/HR/HOD) -->
+<div class="modal-overlay" id="matQBOverlay">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-head">
+      <button class="modal-close" data-close>✕</button>
+      <div class="tag" id="matQBTag">Manage Questions</div>
+      <h3 id="matQBTitle">Material Assessment</h3>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px; color:var(--text-faint); margin-bottom:16px;">The agent must pass this assessment before the next Material unlocks.</div>
+      <div id="matQBLoading" class="empty-state">Loading…</div>
+      <div id="matQBBuilder" style="display:none;">
+        <div id="matQBQuestions"></div>
+        <button type="button" class="qb-add-btn" id="matQBAddBtn">＋ Add Question</button>
+        <div class="field" style="margin-top:16px;">
+          <label for="matQBPassMark">Pass Mark (out of total marks)</label>
+          <input id="matQBPassMark" type="number" min="1" step="1" placeholder="e.g., 8" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn" data-close>Cancel</button>
+          <button class="btn primary" id="matQBSaveBtn">Save Assessment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Per-material assessment quiz modal (agents) -->
+<div class="modal-overlay" id="matQuizOverlay">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <button class="modal-close" data-close>✕</button>
+      <div class="tag" id="matQuizTag">Assessment</div>
+      <h3 id="matQuizTitle">Material Assessment</h3>
+    </div>
+    <div class="modal-body">
+      <div id="matQuizLoading" class="empty-state">Loading questions…</div>
+      <div id="matQuizPlay" style="display:none;">
+        <div id="matQuizProgress" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); margin-bottom:12px;"></div>
+        <div id="matQuizQuestions"></div>
+        <div class="modal-actions">
+          <button class="btn" data-close>Cancel</button>
+          <button class="btn primary" id="matQuizSubmitBtn">Submit Assessment</button>
+        </div>
+      </div>
+      <div id="matQuizResultBox" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -3197,7 +3254,25 @@ const stageEditOverlay = document.getElementById('stageEditOverlay');
 const matOverlay = document.getElementById('matOverlay');
 const mediaViewerOverlay = document.getElementById('mediaViewerOverlay');
 const productCatalogOverlay = document.getElementById('productCatalogOverlay');
-const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay, productCatalogOverlay];
+const matQBOverlay = document.getElementById('matQBOverlay');
+const matQuizOverlay = document.getElementById('matQuizOverlay');
+const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay, productCatalogOverlay, matQBOverlay, matQuizOverlay];
+
+// Per-material assessment status for the stage currently open in the
+// materials viewer: which materials (by flat index) have a question set
+// attached, and which of those the CURRENT logged-in user has passed.
+// Used to lock/unlock materials in sequence for agents.
+let materialAssessmentStatus = { hasQuestions:{}, passed:{} };
+function isMaterialLocked(m){
+  if(m._noGate) return false;
+  if(!currentUser || currentUser.role !== 'agent') return false; // staff can always browse
+  const idx = m._flatIndex;
+  if(idx === undefined || idx === null || idx <= 0) return false;
+  const prevIdx = idx - 1;
+  const prevHasQ = !!materialAssessmentStatus.hasQuestions[prevIdx];
+  const prevPassed = !!materialAssessmentStatus.passed[prevIdx];
+  return prevHasQ && !prevPassed;
+}
 
 const MATERIAL_TYPE_META = {
   ppt:     { icon:'🎞️', label:'Presentation' },
@@ -4063,14 +4138,20 @@ function materialCardHtml(m, idx){
     : m.type==='video' ? 'Plays automatically ▶'
     : m.type==='image' ? 'Opens full-size 🔍'
     : 'Preview in portal';
+  const locked = isMaterialLocked(m);
+  const hasQ = !m._noGate && m._flatIndex !== undefined && !!materialAssessmentStatus.hasQuestions[m._flatIndex];
+  const passed = hasQ && !!materialAssessmentStatus.passed[m._flatIndex];
+  const isAgent = currentUser && currentUser.role === 'agent';
+  const badge = hasQ ? `<div class="mat-assess-badge ${passed?'passed':''}">${passed?'✓ Assessment passed':'📝 Assessment required'}</div>` : '';
+  const takeAssess = (isAgent && hasQ && !passed && !locked) ? `<div class="mat-take-assess" data-take-assess="1">Take Assessment →</div>` : '';
   return `
-    <button type="button" class="material-card" data-idx="${idx}">
-      <div class="ico">${meta.icon}</div>
-      <div class="txt"><div class="t">${escapeHtml(m.title || meta.label)}</div><div class="s">${meta.label} · ${hint}</div></div>
+    <button type="button" class="material-card ${locked?'locked':''}" data-idx="${idx}" ${locked?'data-locked="1"':''}>
+      <div class="ico">${locked?'🔒':meta.icon}</div>
+      <div class="txt"><div class="t">${escapeHtml(m.title || meta.label)}</div><div class="s">${locked ? 'Locked — pass the previous Material\'s assessment first' : meta.label + ' · ' + hint}</div>${badge}${takeAssess}</div>
     </button>`;
 }
 
-function renderMaterialsView(materials){
+function renderMaterialsView(materials, viewTab, viewIdx){
   const area = document.getElementById('materialsViewArea');
   if(!materials || materials.length === 0){
     area.innerHTML = `<div class="empty-state"><span class="ico">📚</span>No materials added for this stage yet.</div>`;
@@ -4097,7 +4178,19 @@ function renderMaterialsView(materials){
       p.addEventListener('click', ()=>{ activeDay = p.dataset.day; paint(); });
     });
     area.querySelectorAll('.material-card').forEach(card=>{
-      card.addEventListener('click', ()=> openMediaViewer(currentMaterialsList[Number(card.dataset.idx)]));
+      card.addEventListener('click', (e)=>{
+        const m = currentMaterialsList[Number(card.dataset.idx)];
+        if(card.dataset.locked){
+          showToast("Locked — pass the previous Material's assessment first.");
+          return;
+        }
+        if(e.target.closest('[data-take-assess]')){
+          e.stopPropagation();
+          openMaterialAssessment(viewTab, viewIdx, m);
+          return;
+        }
+        openMediaViewer(m);
+      });
     });
   }
   paint();
@@ -4106,6 +4199,7 @@ function renderMaterialsView(materials){
 async function loadAndRenderMaterials(tab, idx){
   const area = document.getElementById('materialsViewArea');
   area.innerHTML = `<div class="empty-state">Loading materials…</div>`;
+  materialAssessmentStatus = { hasQuestions:{}, passed:{} };
   try{
     const res = await callBackend({ action:'getMaterials', tab, stageIndex: idx });
     if(!res.success){
@@ -4113,6 +4207,12 @@ async function loadAndRenderMaterials(tab, idx){
       return;
     }
     let materials = Array.isArray(res.materials) ? res.materials.slice() : [];
+    // Flat index assigned BEFORE the Product Training card is injected below,
+    // so it stays aligned with the position each material was saved at
+    // (matches the "material 2 / material 3 / ..." ordering staff see in
+    // the Manage Materials builder), and lines up with MaterialIndex on
+    // the backend for per-material assessment gating.
+    materials.forEach((m,i)=> m._flatIndex = i);
 
     // Product Training (Stage 2): always show the internal Digital TV Package
     // viewer in every New Employee training tab, independent of backend
@@ -4126,12 +4226,20 @@ async function loadAndRenderMaterials(tab, idx){
           title: 'Digital TV Package',
           resourceId: 'https://www.gtplkcbpl.com/packages',
           dayLabel: 'Day 1',
-          dayOrder: 1
+          dayOrder: 1,
+          _noGate: true
         });
       }
     }
 
-    renderMaterialsView(materials);
+    try{
+      const statusRes = await callBackend({ action:'getMaterialAssessmentStatus', tab, stageIndex: idx, username: currentUser ? currentUser.username : '' });
+      if(statusRes && statusRes.success){
+        materialAssessmentStatus = { hasQuestions: statusRes.hasQuestions || {}, passed: statusRes.passed || {} };
+      }
+    } catch(e){ /* gating is best-effort — materials still render unlocked if this fails */ }
+
+    renderMaterialsView(materials, tab, idx);
   } catch(err){
     // Even if the backend material list fails, Product Training still gets
     // the Digital TV Package viewer.
@@ -4141,8 +4249,9 @@ async function loadAndRenderMaterials(tab, idx){
         title: 'Digital TV Package',
         resourceId: 'https://www.gtplkcbpl.com/packages',
         dayLabel: 'Day 1',
-        dayOrder: 1
-      }]);
+        dayOrder: 1,
+        _noGate: true
+      }], tab, idx);
     } else {
       area.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Could not reach the server.')}</div>`;
     }
@@ -5000,8 +5109,12 @@ function renderMatBuilder(){
 function buildMatRow(m, i){
   const div = document.createElement('div');
   div.className = 'qb-row';
+  // Material 1 needs nothing extra. Material 2 onward can have its own
+  // assessment attached — the agent must pass it before the NEXT Material
+  // unlocks. Only QA/Team Leader/HR/HOD ever reach this builder at all.
+  const gearBtn = i >= 1 ? `<button type="button" class="mat-q-gear" data-mat-gear>⚙ Manage Questions</button>` : '';
   div.innerHTML = `
-    <div class="qb-num" style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Material ${i+1}</span><button type="button" class="qb-remove" style="border:1px solid rgba(255,90,90,.35); background:rgba(255,90,90,.08); color:#ff9b9b; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer;">Remove</button></div>
+    <div class="qb-num" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span>Material ${i+1}</span><span style="display:flex; align-items:center;">${gearBtn}<button type="button" class="qb-remove" style="border:1px solid rgba(255,90,90,.35); background:rgba(255,90,90,.08); color:#ff9b9b; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer;">Remove</button></span></div>
     <div style="display:flex; gap:8px; margin-bottom:8px;">
       <input type="text" class="mat-day" placeholder="Day label (e.g., Day 1)" value="${escapeHtml(m.dayLabel||'')}" style="flex:1;" />
       <select class="mat-type" style="flex:0 0 165px; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:#EDEFF5; color:#0A0F1C; font-family:'Inter',sans-serif; font-size:13.5px;">
@@ -5023,6 +5136,13 @@ function buildMatRow(m, i){
   div.querySelector('.mat-type').addEventListener('change', (e)=>{
     div.querySelector('.mat-resource').placeholder = e.target.value === 'website' ? 'Paste the full website URL' : 'Paste the Drive/Sheet/Doc share link or file ID';
   });
+  const gear = div.querySelector('[data-mat-gear]');
+  if(gear){
+    gear.addEventListener('click', ()=>{
+      const title = div.querySelector('.mat-title').value.trim() || `Material ${i+1}`;
+      openMaterialQuestionBuilder(matState.tab, matState.idx, i, title);
+    });
+  }
   return div;
 }
 
@@ -5073,6 +5193,262 @@ document.getElementById('matSaveBtn').addEventListener('click', async ()=>{
     btn.disabled = false; btn.textContent = 'Save Materials';
   }
 });
+
+/* ------------------------------------------------------------------ */
+/* PER-MATERIAL ASSESSMENT — staff builder (⚙ Manage Questions on each  */
+/* Material row, Material 2 onward) + agent quiz that unlocks the next  */
+/* Material once passed.                                                */
+/* ------------------------------------------------------------------ */
+let matQBState = { tab:null, idx:null, materialIndex:null, title:'', questions:[] };
+
+async function openMaterialQuestionBuilder(tab, idx, materialIndex, title){
+  matQBState = { tab, idx, materialIndex, title, questions: [] };
+  document.getElementById('matQBTag').textContent = `Material ${materialIndex+1}`;
+  document.getElementById('matQBTitle').textContent = (title || `Material ${materialIndex+1}`) + ' — Assessment';
+  document.getElementById('matQBLoading').style.display = '';
+  document.getElementById('matQBLoading').textContent = 'Loading…';
+  document.getElementById('matQBBuilder').style.display = 'none';
+  matQBOverlay.classList.add('open');
+
+  try{
+    const res = await callBackend({ action:'getMaterialQuestionsAdmin', role: currentUser.role, tab, stageIndex: idx, materialIndex });
+    if(!res.success){
+      document.getElementById('matQBLoading').textContent = res.message || 'Could not load questions.';
+      return;
+    }
+    matQBState.questions = res.questions || [];
+    document.getElementById('matQBPassMark').value = res.passMark || '';
+    renderMaterialQuestionBuilder();
+  } catch(err){
+    document.getElementById('matQBLoading').textContent = err.message || 'Could not reach the server.';
+  }
+}
+
+function renderMaterialQuestionBuilder(){
+  document.getElementById('matQBLoading').style.display = 'none';
+  document.getElementById('matQBBuilder').style.display = '';
+  const container = document.getElementById('matQBQuestions');
+  container.innerHTML = '';
+  if(!matQBState.questions.length){
+    container.innerHTML = '<div class="qb-empty-question"><strong>No questions yet</strong>Click <b>＋ Add Question</b> to create the first question for this Material.</div>';
+  } else {
+    matQBState.questions.forEach((q,i)=> container.appendChild(buildMatQRow(q,i)));
+  }
+}
+
+function buildMatQRow(q,i){
+  const div = document.createElement('div');
+  div.className = 'qb-row';
+  div.innerHTML = `
+    <div class="qb-card-top">
+      <div class="qb-card-title"><span>Question ${i+1}</span></div>
+    </div>
+    <div class="qb-card-body">
+      <div class="qb-question-head">
+        <textarea rows="2" placeholder="Question" class="qb-question">${escapeHtml(q.questionText||'')}</textarea>
+      </div>
+      ${['A','B','C','D'].map(letter=>`<div class="qb-opt-row"><input type="radio" name="matqb_correct_${i}" value="${letter}" class="qb-correct" ${String(q.correctOption||'').toUpperCase()===letter?'checked':''}/><span class="qb-opt-label">${letter}</span><input type="text" placeholder="Option ${letter}" class="qb-opt-${letter}" value="${escapeHtml(q['option'+letter]||'')}" /></div>`).join('')}
+      <div class="qb-correct-hint">Select the radio button beside the correct answer.</div>
+      <div class="qb-card-bottom">
+        <div class="qb-points"><span>Points</span><input type="number" class="qb-marks" min="1" step="1" value="${Number(q.marks)||1}" /></div>
+        <div class="qb-card-actions"><button type="button" class="qb-icon-btn danger qb-remove">🗑 Delete</button></div>
+      </div>
+    </div>`;
+  div.querySelector('.qb-remove').addEventListener('click', ()=>{
+    syncMatQBStateFromDom();
+    matQBState.questions.splice(i,1);
+    renderMaterialQuestionBuilder();
+  });
+  return div;
+}
+
+function syncMatQBStateFromDom(){
+  const rows = document.querySelectorAll('#matQBQuestions .qb-row');
+  const current = [];
+  rows.forEach((row, i)=>{
+    const radio = row.querySelector('.qb-correct:checked');
+    const old = matQBState.questions[i] || {};
+    current.push({
+      qid: old.qid || '',
+      questionText: row.querySelector('.qb-question')?.value.trim() || '',
+      optionA: row.querySelector('.qb-opt-A')?.value.trim() || '',
+      optionB: row.querySelector('.qb-opt-B')?.value.trim() || '',
+      optionC: row.querySelector('.qb-opt-C')?.value.trim() || '',
+      optionD: row.querySelector('.qb-opt-D')?.value.trim() || '',
+      correctOption: radio ? radio.value : '',
+      marks: Number(row.querySelector('.qb-marks')?.value) || 1
+    });
+  });
+  matQBState.questions = current;
+}
+
+document.getElementById('matQBAddBtn').addEventListener('click', ()=>{
+  syncMatQBStateFromDom();
+  matQBState.questions.push({ questionText:'', optionA:'', optionB:'', optionC:'', optionD:'', correctOption:'', marks:1 });
+  renderMaterialQuestionBuilder();
+  setTimeout(()=>{
+    const cards = document.querySelectorAll('#matQBQuestions .qb-row');
+    const last = cards[cards.length-1];
+    if(last){ last.scrollIntoView({behavior:'smooth', block:'center'}); last.querySelector('.qb-question')?.focus(); }
+  }, 60);
+});
+
+document.getElementById('matQBSaveBtn').addEventListener('click', async ()=>{
+  const rows = document.querySelectorAll('#matQBQuestions .qb-row');
+  const questions = [];
+  let valid = rows.length > 0;
+  rows.forEach(row=>{
+    const questionText = row.querySelector('.qb-question').value.trim();
+    const optionA = row.querySelector('.qb-opt-A').value.trim();
+    const optionB = row.querySelector('.qb-opt-B').value.trim();
+    const optionC = row.querySelector('.qb-opt-C').value.trim();
+    const optionD = row.querySelector('.qb-opt-D').value.trim();
+    const correctRadio = row.querySelector('.qb-correct:checked');
+    const correctOption = correctRadio ? correctRadio.value : '';
+    const marks = Number(row.querySelector('.qb-marks').value) || 0;
+    if(!questionText || !optionA || !optionB || !optionC || !optionD || !correctOption || marks <= 0) valid = false;
+    questions.push({ questionText, optionA, optionB, optionC, optionD, correctOption, marks });
+  });
+  if(!valid){ showToast('Fill in every question, all 4 options, mark the correct answer, and give each question marks > 0.'); return; }
+
+  const passMarkInput = Number(document.getElementById('matQBPassMark').value);
+  const btn = document.getElementById('matQBSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const res = await callBackend({
+      action:'saveMaterialQuestions', role: currentUser.role, username: currentUser.username,
+      tab: matQBState.tab, stageIndex: matQBState.idx, materialIndex: matQBState.materialIndex,
+      questions, passMark: passMarkInput > 0 ? passMarkInput : undefined
+    });
+    if(res.success){
+      showToast(`Saved ${res.count} question(s) · Pass mark ${res.passMark}/${res.totalMarks}.`);
+      matQBOverlay.classList.remove('open');
+      if(currentModalRef && currentModalRef.tab === matQBState.tab && currentModalRef.idx === matQBState.idx){
+        loadAndRenderMaterials(matQBState.tab, matQBState.idx);
+      }
+    } else {
+      showToast(res.message || 'Could not save this assessment.');
+    }
+  } catch(err){
+    showToast(err.message || 'Could not reach the server.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Assessment';
+  }
+});
+
+let matQuizState = { tab:null, idx:null, material:null, answers:{} };
+
+async function openMaterialAssessment(tab, idx, material){
+  matQuizState = { tab, idx, material, answers:{} };
+  matQuizOverlay.classList.add('open');
+  document.getElementById('matQuizTag').textContent = `Material ${Number(material._flatIndex)+1}`;
+  document.getElementById('matQuizTitle').textContent = (material.title || 'Material') + ' — Assessment';
+  document.getElementById('matQuizLoading').style.display = '';
+  document.getElementById('matQuizLoading').textContent = 'Loading questions…';
+  document.getElementById('matQuizPlay').style.display = 'none';
+  document.getElementById('matQuizResultBox').style.display = 'none';
+
+  try{
+    const res = await callBackend({ action:'getMaterialQuestionsForAgent', tab, stageIndex: idx, materialIndex: material._flatIndex });
+    if(!res.success || !res.questions || !res.questions.length){
+      document.getElementById('matQuizLoading').textContent = res.message || 'No assessment has been set up for this material yet.';
+      return;
+    }
+    renderMaterialQuiz(tab, idx, material, res.questions, res.totalMarks, res.passMark);
+  } catch(err){
+    document.getElementById('matQuizLoading').textContent = err.message || 'Could not reach the server.';
+  }
+}
+
+function renderMaterialQuiz(tab, idx, material, questions, totalMarks, passMark){
+  matQuizState.answers = {};
+  document.getElementById('matQuizLoading').style.display = 'none';
+  document.getElementById('matQuizPlay').style.display = '';
+  document.getElementById('matQuizProgress').textContent = `${questions.length} Question(s) · Pass mark ${passMark}/${totalMarks}`;
+
+  const container = document.getElementById('matQuizQuestions');
+  container.innerHTML = '';
+  questions.forEach((q,i)=>{
+    const div = document.createElement('div');
+    div.className = 'quiz-q';
+    div.innerHTML = `
+      <div class="qnum" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); margin-bottom:6px;">Question ${i+1} of ${questions.length}${(Number(q.marks)||1) !== 1 ? ` · ${q.marks} marks` : ''}</div>
+      <div class="qtext" style="font-family:'Space Grotesk',sans-serif; font-size:15px; margin-bottom:12px; line-height:1.45;">${escapeHtml(q.questionText)}</div>
+      ${['A','B','C','D'].map(letter=> `
+        <label class="quiz-opt" data-qid="${q.qid}" data-opt="${letter}">
+          <input type="radio" name="matq_${q.qid}" value="${letter}" />
+          <span>${letter}. ${escapeHtml(q['option'+letter])}</span>
+        </label>`).join('')}
+    `;
+    container.appendChild(div);
+  });
+
+  container.querySelectorAll('.quiz-opt').forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      matQuizState.answers[opt.dataset.qid] = opt.dataset.opt;
+      opt.querySelector('input').checked = true;
+      opt.closest('.quiz-q').querySelectorAll('.quiz-opt').forEach(o=> o.classList.toggle('selected', o===opt));
+    });
+  });
+
+  document.getElementById('matQuizSubmitBtn').onclick = async ()=>{
+    if(Object.keys(matQuizState.answers).length < questions.length){
+      showToast('Please answer all questions before submitting.');
+      return;
+    }
+    const btn = document.getElementById('matQuizSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try{
+      const res = await callBackend({
+        action:'submitMaterialAssessment', username: currentUser.username, fullName: currentUser.fullName,
+        tab, stageIndex: idx, materialIndex: material._flatIndex, answers: matQuizState.answers
+      });
+      if(res.success){
+        showMaterialQuizResult(tab, idx, material, res);
+      } else {
+        showToast(res.message || 'Could not submit the assessment.');
+      }
+    } catch(err){
+      showToast(err.message || 'Could not reach the server.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit Assessment';
+    }
+  };
+}
+
+function showMaterialQuizResult(tab, idx, material, res){
+  document.getElementById('matQuizPlay').style.display = 'none';
+  const box = document.getElementById('matQuizResultBox');
+  box.style.display = '';
+
+  if(res.passed){
+    box.innerHTML = `
+      <div style="text-align:center; padding:24px 10px;">
+        <div style="font-size:44px; margin-bottom:6px;">✅</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color:var(--accent); margin-bottom:6px;">Passed · ${res.score}/${res.total}</div>
+        <div style="color:var(--text-muted); font-size:13.5px; max-width:420px; margin:0 auto 20px; line-height:1.6;">Nice work! The next Material is now unlocked.</div>
+        <div class="modal-actions" style="justify-content:center;"><button class="btn primary" id="matQuizCloseBtn">Continue</button></div>
+      </div>`;
+    document.getElementById('matQuizCloseBtn').addEventListener('click', ()=>{
+      matQuizOverlay.classList.remove('open');
+      if(currentModalRef && currentModalRef.tab === tab && currentModalRef.idx === idx){
+        loadAndRenderMaterials(tab, idx);
+      }
+    });
+  } else {
+    box.innerHTML = `
+      <div style="text-align:center; padding:24px 10px;">
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; color:#ff9b9b;">${res.score}/${res.total}</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; margin-bottom:6px; color:#ff9b9b;">Not passed yet</div>
+        <div style="color:var(--text-muted); font-size:13.5px; max-width:420px; margin:0 auto 20px; line-height:1.6;">Pass mark is ${res.passMark}/${res.total}. Review the material and try again!</div>
+        <div class="modal-actions" style="justify-content:center; gap:12px;">
+          <button class="btn primary" id="matQuizRetakeBtn">Try Again</button>
+          <button class="btn" data-close>Close</button>
+        </div>
+      </div>`;
+    document.getElementById('matQuizRetakeBtn').addEventListener('click', ()=> openMaterialAssessment(tab, idx, material));
+  }
+}
 
 async function loadStagesFromBackend(){
   try{
